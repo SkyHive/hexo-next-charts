@@ -1,0 +1,20 @@
+{
+  "name": "hexo-next-charts",
+  "version": "1.0.0",
+  "description": "ECharts integration for Hexo with simple tag syntax",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [
+    "hexo",
+    "echarts",
+    "charts",
+    "plugin"
+  ],
+  "author": "SkyHive",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.0.0"
+  }
+}
