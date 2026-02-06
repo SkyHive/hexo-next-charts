@@ -10,7 +10,9 @@
 - **按需加载**：仅在使用图表的页面加载 ECharts 资源。
 - **响应式**：图表自动跟随窗口大小调整。
 - **智能地图加载**：自动下载并缓存高精度 GeoJSON，支持 CDN 回退。
+- **自动坐标补全**：只需输入城市名（如 "London", "张掖"），构建时自动获取经纬度并注入，无需手动维护坐标文件。
 - **标准城市代码**：支持 UN/LOCODE 和 IATA 代码（如 `CN SHA`, `PVG`）。
+- **多源数据支持**：自动从高德开放平台 (Amap) 或 OpenStreetMap 获取地理信息。
 
 ## 🚀 安装
 
@@ -18,6 +20,15 @@
 
 ```bash
 npm install hexo-next-charts --save
+```
+
+## ⚙️ 配置 (可选)
+
+为了获得更准确的国内城市定位，建议在 Hexo 项目的 `_config.yml` 中配置高德地图 API Key（Web服务类型）：
+
+```yaml
+next_charts:
+  amap_key: your_amap_key_here # 可选，若不配置则默认使用 OpenStreetMap
 ```
 
 ## 📖 语法
@@ -53,10 +64,10 @@ skills:
 
 ```yaml
 travels:
-  - "CN SHA" # 上海（UN/LOCODE）
-  - "CN HGH" # 杭州
-  - "SG SIN" # 新加坡
-  - { code: "MY PEN", label: "槟城", effect: true } # 高亮显示
+  - "Shanghai" # 自动获取坐标
+  - "张掖" # 中文名自动支持
+  - "London" # 英文名自动支持
+  - { code: "MY PEN", label: "槟城", effect: true } # 混合对象写法
 ```
 
 **Markdown:**
@@ -72,9 +83,12 @@ travels:
 >
 > **数据格式支持**：
 >
-> - 标准代码：`"CN SHA"`, `"PVG"` 等
-> - 传统中文名：`"上海"`, `"杭州"` 等
-> - 高级对象：`{ code: "CN SHA", label: "上海", effect: true }`（`effect` 启用涟漪动画）
+> 1. **城市名称（推荐）**：直接使用中文或英文名称，插件会自动查询坐标。
+>    - 示例：`"上海"`, `"张掖"`, `"London"`, `"New York"`
+> 2. **标准代码**：支持 UN/LOCODE 或 IATA 机场代码。
+>    - 示例：`"CN SHA"`, `"PVG"`, `"LAX"`
+> 3. **高级对象**：自定义标签或高亮效果。
+>    - 示例：`{ name: "Beijing", label: "首都", effect: true }`
 
 ### 示例 3：技能树 (Tree)
 
@@ -98,15 +112,17 @@ skills_tree:
 
 ---
 
-## 🗺️ 地图资源管理
+## 🗺️ 地图资源与坐标管理
 
-插件内置了 **AssetsManager**，在生成静态站点时自动处理地图数据：
+插件内置了 **AssetsManager** 和 **GeoManager**，自动化处理地理数据：
 
-1. **首次生成**时，检测到 `map:china` 会自动从阿里云 DataV CDN 下载高精度省界 GeoJSON。
-2. **文件缓存**到 `<public>/assets/charts/maps/100000_full.json`。
-3. **前端加载**优先尝试本地文件，失败则回退到 jsdelivr CDN。
+1.  **地图文件**：自动下载/缓存 ECharts 需要的 GeoJSON 文件（如中国地图、世界地图）。
+2.  **坐标补全 (Geo-Auto-Resolver)**：
+    - 在 `hexo generate` 构建阶段，插件会自动提取文章中出现的城市名称。
+    - 自动调用 API（高德/OSM）获取经纬度。
+    - 结果缓存至 `source/_data/places.json`，确保构建速度和稳定性。
 
-你无需手动下载任何地图文件，插件会自动处理。
+你无需手动查找经纬度，只需在 Front-matter 中写下城市名字即可。
 
 ---
 
