@@ -1,5 +1,7 @@
 # hexo-next-charts
 
+![Build Status](https://github.com/SkyHive/hexo-next-charts/actions/workflows/ci.yml/badge.svg)
+
 让博主像写配置一样写图表。通过一行 Tag 指令，将 Markdown 中的 YAML 数据对象映射为 ECharts 视图。
 
 ## 🌟 特性
@@ -194,7 +196,28 @@ flowchart TD
 
 确保你在 `hexo-next-charts` 目录中。
 
-### 2. 链接到 Hexo 项目
+安装所有依赖（包括 devDependencies）：
+
+```bash
+npm install
+```
+
+### 2. 运行 CI 检查
+
+提交代码前，请务必运行以下命令确保通过 CI 检查：
+
+```bash
+# 运行 ESLint 代码检查
+npm run lint
+
+# 运行自动化测试
+npm test
+
+# 运行逻辑验证脚本
+node tests/verify.js
+```
+
+### 3. 链接到 Hexo 项目
 
 在你的 **Hexo 博客根目录**中，使用 `npm link` 挂载本地开发的插件：
 

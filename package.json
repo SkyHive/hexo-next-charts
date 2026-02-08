@@ -4,7 +4,8 @@
   "description": "ECharts integration for Hexo with simple tag syntax",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "lint": "eslint ."
   },
   "keywords": [
     "hexo",
@@ -15,6 +16,9 @@
   "author": "SkyHive",
   "license": "MIT",
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "eslint": "^9.39.2",
+    "globals": "^17.3.0",
     "jest": "^29.0.0"
   },
   "files": [
