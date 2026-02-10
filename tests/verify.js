@@ -1,7 +1,7 @@
 // Basic resolvePath implementation since util.js was removed
 function resolvePath(obj, path) {
     if (!path || !obj) return undefined;
-    return path.split(".").reduce((prev, curr) => {
+    return path.split('.').reduce((prev, curr) => {
         return prev ? prev[curr] : undefined;
     }, obj);
 }
@@ -84,7 +84,7 @@ console.log('\n--- Testing Injector (Enhanced) ---');
     const mockGeoManager = {
         register: (name) => console.log('Mock register:', name),
         resolve: async () => { },
-        getResolved: (name) => ({ coords: [100, 20] })
+        getResolved: (_name) => ({ coords: [100, 20] })
     };
 
     // Use .call to set 'this' context, pass data and geoManager as arguments
