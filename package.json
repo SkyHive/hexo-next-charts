@@ -18,6 +18,10 @@
   ],
   "author": "SkyHive",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SkyHive/hexo-next-charts"
+  },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "eslint": "^9.39.2",
