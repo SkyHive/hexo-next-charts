@@ -6,6 +6,13 @@ function resolvePath(obj, path) {
     }, obj);
 }
 
+const path = require('path');
+const ChartRegistry = require('../lib/chart_registry');
+
+// Auto-register chart transformers for testing
+const chartsDir = path.join(__dirname, '..', 'lib', 'charts');
+ChartRegistry.autoLoad(chartsDir);
+
 const radarTransformer = require('../lib/charts/radar');
 const mapTransformer = require('../lib/charts/map');
 const tag = require('../lib/tag');

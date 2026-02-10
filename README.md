@@ -137,15 +137,20 @@ skills_tree:
 
 | 文件路径 | 类型 | 核心职责 |
 | :--- | :--- | :--- |
-| `index.js` | 入口 | 插件主入口，注册 Hexo Tag (`{% echart %}`) 和 Filter (`after_post_render`)。 |
+| `index.js` | 入口 | 插件主入口，注册 Hexo Tag (`{% echart %}`) 和 Filter (`after_post_render`)，初始化 ChartRegistry。 |
 | `lib/tag.js` | 标签解析 | 解析 Markdown 中的标签参数，生成带有 Base64 数据载荷的 HTML 占位符。 |
-| `lib/injector.js` | 注入处理 | **核心引擎**。扫描文章中的占位符，调用对应的图表转换器，处理地理坐标，并注入 ECharts 前端加载脚本。 |
+| `lib/injector.js` | 注入处理 | **协调器**。扫描文章中的占位符，通过 ChartRegistry 调用对应转换器，处理地理坐标，并注入前端脚本。 |
+| `lib/chart_registry.js` | 注册中心 | **图表注册中心**。维护图表类型到转换器的映射，支持动态注册，自动扫描加载 charts 目录。 |
+| `lib/charts/base.js` | 基类 | **转换器基类**。定义统一接口 `validate()`, `transform()`, `mergeConfig()`，提供配置合并和通用构建方法。 |
+| `lib/config_merger.js` | 配置合并 | **配置合并器**。深度合并默认配置和用户配置，处理 ECharts Option 的特殊合并逻辑。 |
+| `lib/frontend_script_builder.js` | 脚本构建 | **前端脚本生成器**。生成 ECharts 加载和初始化脚本，分离模板与逻辑。 |
+| `lib/utils/path_resolver.js` | 工具 | **路径工具**。提供 dot-notation 路径解析、URL 拼接等通用工具函数。 |
 | `lib/assets_manager.js` | 资源管理 | 负责下载和缓存外部资源（如 GeoJSON 地图数据）。支持从 AliYun DataV 或 CDN 获取数据。 |
 | `lib/map_processor.js` | 地图处理 | **地图合成器**。负责将世界地图 (`world.json`)、中国地图 (`china.json`) 和国界轮廓 (`china-contour.json`) 合并为高质量的 `world_cn.json`。 |
 | `lib/geo_manager.js` | 坐标管理 | 负责城市名称到经纬度的自动转换。调用高德/OSM API，并缓存结果到 `places.json`。 |
 | `lib/store_adapter.js` | 缓存适配 | **数据持久化**。封装了对本地 JSON 缓存文件（如 `places.json`）的读写操作，提供统一的数据存取接口。 |
 | `lib/coord_helper.js` | 坐标转换 | **算法工具**。提供 GCJ-02 (高德/腾讯) 到 WGS-84 (GPS/国际标准) 的坐标系转换算法，纠正国内地图 API 的偏移。 |
-| `lib/charts/*.js` | 图表定义 | **转换器**。将用户在 Front-matter 中的 YAML 数据转换为 ECharts 的 `option` 配置对象。目前包含 `map.js` (地图), `radar.js` (雷达图), `tree.js` (树图)。 |
+| `lib/charts/*.js` | 图表定义 | **转换器**。继承 BaseTransformer，将 YAML 数据转换为 ECharts 的 `option` 配置对象。目前包含 `map.js` (地图), `radar.js` (雷达图), `tree.js` (树图)。 |
 
 ### 🔄 工作流程架构图
 
@@ -155,19 +160,25 @@ flowchart TD
     subgraph BuildTime [Hexo 构建阶段]
         MD[Markdown 文件] --> Tag[lib/tag.js]
         Tag -->|生成占位符| Content[HTML 内容]
-        
+
         Content --> Injector[lib/injector.js]
-        
+
         Injector -->|1. 提取城市名| GeoMgr[lib/geo_manager.js]
         GeoMgr -->|API 查询 & 缓存| Places[places.json]
-        
+
         Injector -->|2. 检查地图需求| AssetsMgr[lib/assets_manager.js]
         AssetsMgr -->|下载基底数据| AliYun[阿里云 DataV / CDN]
         AssetsMgr -->|合并处理| MapProc[lib/map_processor.js]
         MapProc -->|生成| WorldCN[public/maps/world_cn.json]
-        
-        Injector -->|3. 生成配置| ChartTrans[lib/charts/*.js]
+
+        Injector -->|3. 查询转换器| Registry[lib/chart_registry.js]
+        Registry -->|加载| ChartTrans[lib/charts/*.js]
+        ChartTrans -->|继承| BaseTrans[lib/charts/base.js]
+        ChartTrans -->|使用| ConfigMerger[lib/config_merger.js]
         ChartTrans -->|输出| Script[前端初始化脚本]
+
+        Injector -->|4. 构建脚本| ScriptBuilder[lib/frontend_script_builder.js]
+        ScriptBuilder -->|生成| Script
     end
 
     subgraph Runtime [浏览器运行阶段]
@@ -175,7 +186,7 @@ flowchart TD
         HTML -->|执行脚本| EChartsLoader[ECharts 加载器]
         EChartsLoader -->|请求| WorldCN
         EChartsLoader -->|渲染| Canvas[ECharts 实例]
-        
+
         %% 交互逻辑
         Canvas -->|缩放事件 georoam| ZoomHandler[动态气泡缩放]
         Canvas -->|悬停事件| HoverHandler[省份高亮]
@@ -262,7 +273,79 @@ node verify.js
 
 ## 扩展图表
 
-你可以通过在 `lib/charts/` 目录下添加新的 JS 文件来扩展图表类型。每个文件导出一个函数，接收原始数据并返回 ECharts 的 `option` 对象。
+你可以通过在 `lib/charts/` 目录下添加新的 JS 文件来扩展图表类型。插件使用 **ChartRegistry** 自动扫描并注册图表转换器。
+
+### 快速创建新图表类型
+
+继承 `BaseTransformer` 基类，实现三个核心方法：
+
+```javascript
+// lib/charts/my_chart.js
+const BaseTransformer = require('./base');
+
+class MyChartTransformer extends BaseTransformer {
+    /**
+     * 返回默认配置
+     */
+    getDefaultConfig() {
+        return {
+            backgroundColor: 'transparent',
+            // ... 其他默认配置
+        };
+    }
+
+    /**
+     * 验证输入数据
+     */
+    validate(data) {
+        if (!Array.isArray(data)) {
+            return { valid: false, error: 'Data must be an array' };
+        }
+        return { valid: true };
+    }
+
+    /**
+     * 转换数据为 ECharts Option
+     */
+    transform(data) {
+        const config = this.mergeConfig(this.config);
+
+        // 构建 ECharts Option
+        const option = {
+            series: [{
+                type: 'line', // 或其他图表类型
+                data: data
+            }]
+        };
+
+        // 允许用户通过 option 参数覆盖任意配置
+        return this.merger.merge(option, config.option || {});
+    }
+}
+
+// 导出工厂函数（必需，用于 ChartRegistry 自动加载）
+module.exports = function(data, config = {}) {
+    return new MyChartTransformer(config).transform(data);
+};
+
+// 可选：导出类以便直接实例化
+module.exports.MyChartTransformer = MyChartTransformer;
+```
+
+### 特性说明
+
+1. **自动注册**：将文件放入 `lib/charts/` 目录即可自动加载，无需修改其他代码
+2. **配置合并**：用户可通过 `option:{...}` 参数覆盖任意 ECharts 配置
+3. **验证支持**：在 `validate()` 中实现数据校验，失败时会输出友好错误信息
+4. **工具方法**：基类提供 `buildTitle()`, `buildTooltip()`, `buildToolbox()` 等便捷方法
+
+### 使用示例
+
+创建文件后，立即可以在 Markdown 中使用：
+
+```markdown
+{% echart my_chart my_data title:"我的图表" option:{color:['#ff5722']} %}
+```
 
 ---
 
