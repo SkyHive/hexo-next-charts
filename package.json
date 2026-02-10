@@ -1,6 +1,9 @@
 {
-  "name": "hexo-next-charts",
-  "version": "1.0.0",
+  "name": "@skyhive/hexo-next-charts",
+  "publishConfig": {
+     "access": "public"
+  },
+  "version": "1.0.1",
   "description": "ECharts integration for Hexo with simple tag syntax",
   "main": "index.js",
   "scripts": {
