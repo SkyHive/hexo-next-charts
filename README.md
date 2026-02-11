@@ -6,10 +6,12 @@
 
 ## 🌟 特性
 
-- **简单易用**：一行标签 `{% echart radar my_skills %}` 即可生成图表。
+- **简单易用**：一行标签即可生成图表，如 `{% echart radar my_skills %}`、`{% echart line my_data %}`。
+- **丰富图表**：支持雷达图、地图、树图、折线图、柱状图、饼图共 6 种常用图表。
 - **数据解耦**：从 Front-matter 或全局配置中读取数据。
 - **暗黑模式**：自动适配主题切换（支持 Butterfly, Next 等主流主题）。
 - **按需加载**：仅在使用图表的页面加载 ECharts 资源。
+- **散点抖动**：当地图上有 8 个以上标记点时，自动启用 ECharts v6 的 jitter 功能防止重叠。
 - **响应式**：图表自动跟随窗口大小调整。
 - **智能地图加载**：自动下载并缓存高精度 GeoJSON，支持 CDN 回退。
 - **自动坐标补全**：只需输入城市名（如 "London", "张掖"），构建时自动获取经纬度并注入，无需手动维护坐标文件。
@@ -26,11 +28,39 @@ npm install hexo-next-charts --save
 
 ## ⚙️ 配置 (可选)
 
+### 基础配置
+
 为了获得更准确的国内城市定位，建议在 Hexo 项目的 `_config.yml` 中配置高德地图 API Key（Web服务类型）：
 
 ```yaml
 next_charts:
   amap_key: your_amap_key_here # 可选，若不配置则默认使用 OpenStreetMap
+```
+
+### ECharts 版本配置
+
+**插件已默认使用 ECharts v6.0.0**。
+
+```yaml
+next_charts:
+  amap_key: your_amap_key_here
+  echarts:
+    # 自定义 ECharts CDN 地址（默认使用 v6.0.0）
+    cdn: https://cdn.jsdelivr.net/npm/echarts@6.0.0/dist/echarts.min.js
+    # 自定义地图 CDN 回退地址
+    map_cdn:
+      world: https://cdn.jsdelivr.net/npm/echarts/map/js/world.js
+      china: https://cdn.jsdelivr.net/npm/echarts/map/js/china.js
+```
+
+**使用其他 CDN：**
+
+```yaml
+next_charts:
+  echarts:
+    cdn: https://unpkg.com/echarts@6.0.0/dist/echarts.min.js
+    # 或
+    cdn: https://cdnjs.cloudflare.com/ajax/libs/echarts/6.0.0/echarts.min.js
 ```
 
 ## 📖 语法
@@ -39,7 +69,7 @@ next_charts:
 {% echart [type] [data_source] [options] %}
 ```
 
-- **type**: 图表类型（支持 `radar`, `map`, `tree`）。
+- **type**: 图表类型（支持 `radar`, `map`, `tree`, `line`, `bar`, `pie`）。
 - **data_source**: 数据路径（对应 Front-matter 里的 key）。
 - **options**: (可选) 键值对参数，如 `title:"标题"` `height:500px` `map:china`。
 
@@ -112,6 +142,70 @@ skills_tree:
 ```markdown
 {% echart tree skills_tree title:"技能树" %}
 ```
+
+### 示例 4：折线图 (Line)
+
+**Front-matter:**
+
+```yaml
+monthly_visits:
+  - { label: "1月", value: 1200 }
+  - { label: "2月", value: 1500 }
+  - { label: "3月", value: 1800 }
+  - { label: "4月", value: 2200 }
+  - { label: "5月", value: 2800 }
+  - { label: "6月", value: 3500 }
+```
+
+**Markdown:**
+
+```markdown
+{% echart line monthly_visits title:"博客月访问量" smooth:true showArea:true %}
+```
+
+### 示例 5：柱状图 (Bar)
+
+**Front-matter:**
+
+```yaml
+framework_stats:
+  - { label: "React", value: 45 }
+  - { label: "Vue", value: 38 }
+  - { label: "Angular", value: 22 }
+  - { label: "Svelte", value: 15 }
+```
+
+**Markdown:**
+
+```markdown
+{% echart bar framework_stats title:"前端框架使用统计" horizontal:false %}
+```
+
+### 示例 6：饼图 (Pie)
+
+**Front-matter:**
+
+```yaml
+expense_breakdown:
+  - { name: "交通", value: 3500, color: "#5470c6" }
+  - { name: "住宿", value: 2400, color: "#91cc75" }
+  - { name: "餐饮", value: 1800, color: "#fac858" }
+  - { name: "门票", value: 800, color: "#ee6666" }
+  - { name: "购物", value: 1200, color: "#73c0de" }
+```
+
+**Markdown:**
+
+```markdown
+{% echart pie expense_breakdown title:"旅行费用构成" %}
+```
+
+> **饼图变体**：
+>
+> - 普通饼图：`radius: ["0%", "70%"]`
+> - 甜甜圈图：`radius: ["40%", "70%"]`（默认）
+> - 玫瑰图：`roseType:"radius"`
+> - 南丁格尔图：`roseType:"area"`
 
 ---
 
