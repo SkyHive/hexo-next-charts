@@ -66,7 +66,8 @@ jobs:
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
 
+    - name: Build package
+      run: pnpm pack
+
     - name: Publish to NPM
-      run: pnpm publish --no-git-checks
-      env:
-        NPM_CONFIG_PROVENANCE: true
+      run: npm publish --provenance --access public
