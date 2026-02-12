@@ -67,6 +67,6 @@ jobs:
       run: pnpm install --frozen-lockfile
 
     - name: Publish to NPM
-      run: pnpm publish
+      run: pnpm publish --no-git-checks
       env:
         NPM_CONFIG_PROVENANCE: true
