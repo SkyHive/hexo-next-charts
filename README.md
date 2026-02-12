@@ -35,7 +35,11 @@
 ## 安装
 
 ```bash
+# 使用 npm
 npm install hexo-next-charts --save
+
+# 或使用 pnpm
+pnpm add hexo-next-charts
 ```
 
 ---

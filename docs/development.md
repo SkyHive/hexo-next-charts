@@ -11,7 +11,11 @@
 安装所有依赖（包括 devDependencies）：
 
 ```bash
+# 使用 npm
 npm install
+
+# 或使用 pnpm
+pnpm install
 ```
 
 ### 2. 运行 CI 检查
@@ -21,9 +25,13 @@ npm install
 ```bash
 # 运行 ESLint 代码检查
 npm run lint
+# 或
+pnpm lint
 
 # 运行自动化测试
 npm test
+# 或
+pnpm test
 
 # 运行逻辑验证脚本
 node tests/verify.js
@@ -36,9 +44,13 @@ node tests/verify.js
 ```bash
 # 在 hexo-next-charts 目录运行
 npm link
+# 或
+pnpm link
 
 # 进入你的 Hexo 博客根目录运行
 npm link hexo-next-charts
+# 或
+pnpm link hexo-next-charts
 ```
 
 ### 4. 配置测试数据
