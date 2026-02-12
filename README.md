@@ -35,7 +35,7 @@
 ## 安装
 
 ```bash
-npm install hexo-next-charts --save
+pnpm add hexo-next-charts
 ```
 
 ---
