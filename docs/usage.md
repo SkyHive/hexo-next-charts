@@ -102,12 +102,23 @@ monthly_visits:
   - { label: "4月", value: 2200 }
   - { label: "5月", value: 2800 }
   - { label: "6月", value: 3500 }
+
+# 多条折线图示例
+multi_lines:
+  - { label: "1月", "直接访问": 1200, "搜索引擎": 800 }
+  - { label: "2月", "直接访问": 1500, "搜索引擎": 900 }
+  - { label: "3月", "直接访问": 1800, "搜索引擎": 1100 }
+  - { label: "4月", "直接访问": 2200, "搜索引擎": 1300 }
 ```
 
 **Markdown:**
 
 ```markdown
 {% echart line monthly_visits title:"博客月访问量" smooth:true showArea:true %}
+
+<!-- 多条折线（需移除 value 字段，其余字段自动解析为新的数据列） -->
+
+{% echart line multi_lines title:"访问来源对比" smooth:true showLegend:true legendPosition:left showLabel:true yAxisMargin:15 boundaryGap:true %}
 ```
 
 ---
